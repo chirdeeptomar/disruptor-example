@@ -9,21 +9,17 @@ import com.empyrean.disruptor.handlers.QuotePublisher;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 
+/**
+ * A single producer publishes to the ring buffer, and a single consumer
+ * processes the events.
+ */
 public class SingleProducer {
 
-    private final Disruptor<Quote> disruptor;
+    public void run(Disruptor<Quote> disruptor) throws Exception {
+        disruptor.handleEventsWith(new QuotePublisher());
+        disruptor.start();
 
-    public SingleProducer(Disruptor<Quote> disruptor, int bufferSize) {
-
-        this.disruptor = disruptor;
-
-    }
-
-    public void run() throws Exception {
-        this.disruptor.handleEventsWith(new QuotePublisher());
-        this.disruptor.start();
-
-        publish(this.disruptor.getRingBuffer());
+        publish(disruptor.getRingBuffer());
     }
 
     private void publish(RingBuffer<Quote> ringBuffer) {

@@ -10,15 +10,12 @@ import com.empyrean.disruptor.handlers.QuotePublisher;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 
+/**
+ * Multiple consumers process the same events.
+ */
 public class Multicast {
 
-    private final Disruptor<Quote> disruptor;
-
-    public Multicast(Disruptor<Quote> disruptor) {
-        this.disruptor = disruptor;
-    }
-
-    public void run() throws Exception {
+    public void run(Disruptor<Quote> disruptor) throws Exception {
         disruptor.handleEventsWith(new QuotePublisher(), new QuoteJournaler());
         disruptor.start();
 

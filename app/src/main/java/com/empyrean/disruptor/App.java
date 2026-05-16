@@ -3,36 +3,27 @@
  */
 package com.empyrean.disruptor;
 
+import com.empyrean.disruptor.patterns.loadbalancer.LoadBalancer;
+import com.empyrean.disruptor.patterns.mpsc.MultiProducer;
 import com.empyrean.disruptor.patterns.multicast.Multicast;
 import com.empyrean.disruptor.patterns.pipeline.Pipeline;
 import com.empyrean.disruptor.patterns.spsc.SingleProducer;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.util.DaemonThreadFactory;
+import com.lmax.disruptor.dsl.ProducerType;
 
 public class App {
     static int bufferSize = 1024;
 
     public static void main(String[] args) throws Exception {
         String mode = args.length > 0 ? args[0] : "spsc";
-        Disruptor<Quote> disruptor = new Disruptor<>(Quote::new, bufferSize, DaemonThreadFactory.INSTANCE);
+        DisruptorFactory factory = new DisruptorFactory(bufferSize);
 
         switch (mode.toLowerCase()) {
-            case "spsc"      -> runSpsc(disruptor);
-            case "multicast" -> runMulticast(disruptor);
-            case "pipeline"  -> runPipeline(disruptor);
-            default          -> throw new IllegalArgumentException("Unknown mode: " + mode + ". Use 'spsc', 'multicast', or 'pipeline'.");
+            case "spsc"      -> new SingleProducer().run(factory.create(ProducerType.SINGLE));
+            case "multicast" -> new Multicast().run(factory.create(ProducerType.SINGLE));
+            case "pipeline"  -> new Pipeline().run(factory.create(ProducerType.SINGLE));
+            case "mpsc"         -> new MultiProducer().run(factory.create(ProducerType.MULTI));
+            case "loadbalancer" -> new LoadBalancer().run(factory.create(ProducerType.SINGLE));
+            default             -> throw new IllegalArgumentException("Unknown mode: " + mode + ". Use 'spsc', 'multicast', 'pipeline', 'mpsc', or 'loadbalancer'.");
         }
-    }
-
-    private static void runSpsc(Disruptor<Quote> disruptor) throws Exception {
-        new SingleProducer(disruptor, bufferSize).run();
-    }
-
-    private static void runMulticast(Disruptor<Quote> disruptor) throws Exception {
-        new Multicast(disruptor).run();
-    }
-
-    private static void runPipeline(Disruptor<Quote> disruptor) throws Exception {
-        new Pipeline(disruptor).run();
     }
 }

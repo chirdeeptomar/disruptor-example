@@ -10,18 +10,16 @@ import com.empyrean.disruptor.handlers.QuotePublisher;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 
+/**
+ * A pipeline of event handlers where each handler processes events in sequence.
+ */
 public class Pipeline {
 
-    private final Disruptor<Quote> disruptor;
-
-    public Pipeline(Disruptor<Quote> disruptor) {
-        this.disruptor = disruptor;
-    }
-
-    public void run() throws Exception {
-        // QuoteEnricher runs first; QuotePublisher only receives events after enrichment completes
+    public void run(Disruptor<Quote> disruptor) throws Exception {
+        // QuoteEnricher runs first; QuotePublisher only receives events after
+        // enrichment completes
         disruptor.handleEventsWith(new QuoteEnricher())
-                 .then(new QuotePublisher());
+                .then(new QuotePublisher());
         disruptor.start();
 
         publish(disruptor.getRingBuffer());
