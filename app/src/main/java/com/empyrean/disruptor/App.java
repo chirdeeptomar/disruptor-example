@@ -3,9 +3,9 @@
  */
 package com.empyrean.disruptor;
 
-import java.nio.ByteBuffer;
-
-import com.lmax.disruptor.RingBuffer;
+import com.empyrean.disruptor.patterns.multicast.Multicast;
+import com.empyrean.disruptor.patterns.pipeline.Pipeline;
+import com.empyrean.disruptor.patterns.spsc.SingleProducer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 
@@ -13,16 +13,26 @@ public class App {
     static int bufferSize = 1024;
 
     public static void main(String[] args) throws Exception {
+        String mode = args.length > 0 ? args[0] : "spsc";
         Disruptor<Quote> disruptor = new Disruptor<>(Quote::new, bufferSize, DaemonThreadFactory.INSTANCE);
 
-        disruptor.handleEventsWith(new QuoteEventHandler(), new LoggingEventHandler());
-        disruptor.start();
-
-        RingBuffer<Quote> ringBuffer = disruptor.getRingBuffer();
-        ByteBuffer bb = ByteBuffer.allocate(8);
-        for (long l = 0; true; l++) {
-            bb.putLong(0, l);
-            ringBuffer.publishEvent((event, sequence, buffer) -> event.set("QUOTE", (float) buffer.getLong(0)), bb);
+        switch (mode.toLowerCase()) {
+            case "spsc"      -> runSpsc(disruptor);
+            case "multicast" -> runMulticast(disruptor);
+            case "pipeline"  -> runPipeline(disruptor);
+            default          -> throw new IllegalArgumentException("Unknown mode: " + mode + ". Use 'spsc', 'multicast', or 'pipeline'.");
         }
+    }
+
+    private static void runSpsc(Disruptor<Quote> disruptor) throws Exception {
+        new SingleProducer(disruptor, bufferSize).run();
+    }
+
+    private static void runMulticast(Disruptor<Quote> disruptor) throws Exception {
+        new Multicast(disruptor).run();
+    }
+
+    private static void runPipeline(Disruptor<Quote> disruptor) throws Exception {
+        new Pipeline(disruptor).run();
     }
 }

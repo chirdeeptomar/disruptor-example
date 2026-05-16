@@ -40,3 +40,14 @@ application {
     // Define the main class for the application.
     mainClass.set("com.empyrean.disruptor.App")
 }
+
+tasks.register<Jar>("fatJar") {
+    archiveClassifier.set("all")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes["Main-Class"] = "com.empyrean.disruptor.App"
+    }
+    from(sourceSets.main.get().output)
+    dependsOn(configurations.runtimeClasspath)
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
