@@ -6,6 +6,9 @@ import org.apache.logging.log4j.Logger;
 import com.empyrean.disruptor.Quote;
 import com.lmax.disruptor.EventHandler;
 
+/**
+ * QuoteJournaler is an EventHandler that logs the Quote events.
+ */
 public class QuoteJournaler implements EventHandler<Quote> {
 
     Logger logger = LogManager.getLogger(QuoteJournaler.class);

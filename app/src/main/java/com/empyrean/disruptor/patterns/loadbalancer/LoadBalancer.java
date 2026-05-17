@@ -16,7 +16,7 @@ public class LoadBalancer {
 
     private static final int WORKER_COUNT = 3;
 
-    public void run(Disruptor<Quote> disruptor) throws Exception {
+    public void run(Disruptor<Quote> disruptor) {
         QuoteWorkerPublisher[] workers = new QuoteWorkerPublisher[WORKER_COUNT];
         for (int i = 0; i < WORKER_COUNT; i++) {
             workers[i] = new QuoteWorkerPublisher(i, WORKER_COUNT);

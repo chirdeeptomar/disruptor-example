@@ -3,6 +3,8 @@
  */
 package com.empyrean.disruptor;
 
+import com.empyrean.disruptor.patterns.batching.Batching;
+import com.empyrean.disruptor.patterns.diamond.Diamond;
 import com.empyrean.disruptor.patterns.loadbalancer.LoadBalancer;
 import com.empyrean.disruptor.patterns.mpsc.MultiProducer;
 import com.empyrean.disruptor.patterns.multicast.Multicast;
@@ -23,7 +25,9 @@ public class App {
             case "pipeline"  -> new Pipeline().run(factory.create(ProducerType.SINGLE));
             case "mpsc"         -> new MultiProducer().run(factory.create(ProducerType.MULTI));
             case "loadbalancer" -> new LoadBalancer().run(factory.create(ProducerType.SINGLE));
-            default             -> throw new IllegalArgumentException("Unknown mode: " + mode + ". Use 'spsc', 'multicast', 'pipeline', 'mpsc', or 'loadbalancer'.");
+            case "batching"     -> new Batching().run(factory.create(ProducerType.SINGLE));
+            case "diamond"      -> new Diamond().run(factory.create(ProducerType.SINGLE));
+            default             -> throw new IllegalArgumentException("Unknown mode: " + mode + ". Use 'spsc', 'multicast', 'pipeline', 'mpsc', 'loadbalancer', 'batching', or 'diamond'.");
         }
     }
 }

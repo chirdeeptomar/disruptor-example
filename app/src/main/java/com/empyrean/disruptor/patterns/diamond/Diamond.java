@@ -1,24 +1,22 @@
-package com.empyrean.disruptor.patterns.pipeline;
+package com.empyrean.disruptor.patterns.diamond;
 
-import java.nio.ByteBuffer;
 import java.util.Random;
 
 import com.empyrean.disruptor.Instrument;
 import com.empyrean.disruptor.Quote;
 import com.empyrean.disruptor.handlers.QuoteLifetimeEnricher;
 import com.empyrean.disruptor.handlers.QuotePublisher;
+import com.empyrean.disruptor.handlers.QuoteValidityEnricher;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 
-/**
- * A pipeline of event handlers where each handler processes events in sequence.
- */
-public class Pipeline {
+/* Diamond Pattern Implementation */
+public class Diamond {
 
     public void run(Disruptor<Quote> disruptor) throws Exception {
-        // QuoteEnricher runs first; QuotePublisher only receives events after
-        // enrichment completes
-        disruptor.handleEventsWith(new QuoteLifetimeEnricher())
+        // Fan-out: both enrichers process each event concurrently.
+        // Fan-in: QuotePublisher only fires after both enrichers have finished.
+        disruptor.handleEventsWith(new QuoteLifetimeEnricher(), new QuoteValidityEnricher())
                 .then(new QuotePublisher());
         disruptor.start();
 
@@ -26,12 +24,10 @@ public class Pipeline {
     }
 
     private void publish(RingBuffer<Quote> ringBuffer) {
-        ByteBuffer bb = ByteBuffer.allocate(8);
         Random random = new Random();
-        for (long l = 0; true; l++) {
-            bb.putLong(0, l);
+        for (;;) {
             ringBuffer.publishEvent(
-                    (event, sequence, buffer) -> event.set(Instrument.random(), random.nextDouble(1, 10000)), bb);
+                    (event, sequence, buffer) -> event.set(Instrument.random(), random.nextDouble(1, 10000)));
         }
     }
 }
